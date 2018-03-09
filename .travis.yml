@@ -26,8 +26,9 @@ script:
   - export KBUILD_BUILD_HOST="Fire-Dragon"
   - export ARCH=arm
   - export ARCH_MTK_PLATFORM=mt6592
-  - mkdir fly_j608_defconfig
-  - make -j4
+  - mkdir out
+  - make O=out fly_j608_defconfig
+  - make O=out -j2
 
 after_success:
 - curl --upload-file out/arch/arm/boot/zImage https://transfer.sh/yj_kernel
