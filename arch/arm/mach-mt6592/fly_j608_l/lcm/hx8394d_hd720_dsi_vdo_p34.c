@@ -56,9 +56,62 @@ static LCM_UTIL_FUNCS lcm_util = {0};
 #define read_reg(cmd)											lcm_util.dsi_dcs_read_lcm_reg(cmd)
 #define read_reg_v2(cmd, buffer, buffer_size)
 
+  
+// ---------------------------------------------------------------------------
+//  LCM Driver Implementations
+// ---------------------------------------------------------------------------
+
+static void lcm_set_util_funcs(const LCM_UTIL_FUNCS * util)
+{
+  memcpy(&lcm_util, util, sizeof(LCM_UTIL_FUNCS));
+}
+
+static void lcm_get_params(LCM_PARAMS * params)
+{
+    memset(params, 0, sizeof(LCM_PARAMS));
+	
+    params->type   								= 2;  
+    params->width  							= FRAME_WIDTH;
+    params->height 							= FRAME_HEIGHT;
+
+    params->dsi.mode   = BURST_VDO_MODE;	
+
+    // DSI
+    /* Command mode setting */
+    params->dsi.LANE_NUM						= LCM_FOUR_LANE;
+    //The following defined the fomat for data coming from LCD engine.
+    params->dsi.data_format.color_order 			= LCM_COLOR_ORDER_RGB;
+    params->dsi.data_format.trans_seq   			= LCM_DSI_TRANS_SEQ_MSB_FIRST;
+    params->dsi.data_format.padding     			= LCM_DSI_PADDING_ON_LSB;
+    params->dsi.data_format.format      			= LCM_DSI_FORMAT_RGB888;
+
+   // Highly depends on LCD driver capability.
+   // Not support in MT6573
+    params->dsi.packet_size=256;
+  
+   //video mode timing
+    params->dsi.intermediat_buffer_num = 0;	
+    params->dsi.PS								= LCM_PACKED_PS_24BIT_RGB888;
+
+    params->dsi.vertical_sync_active				= 2;
+    params->dsi.vertical_backporch				= 14;
+    params->dsi.vertical_frontporch				= 16;
+    params->dsi.vertical_active_line				= FRAME_HEIGHT;
+
+    params->dsi.horizontal_sync_active			= 2;
+    params->dsi.horizontal_backporch			= 42;
+    params->dsi.horizontal_frontporch			= 44;
+    params->dsi.horizontal_active_pixel			= FRAME_WIDTH;
+  
+    //improve clk quality
+    params->dsi.PLL_CLOCK = 198; //this value must be in MTK suggested table
+    params->dsi.ssc_disable = 1;
+	
+}
+	
 static void init_lcm_registers(void)
 {
-	unsigned int data_array[16];
+  unsigned int data_array[16];
   
   data_array[0] = 0x00043902;
   data_array[1] = 0x9483FFB9;
@@ -192,61 +245,7 @@ static void init_lcm_registers(void)
   data_array[0] = 0x00290500;
   dsi_set_cmdq(data_array, 1, 1);
   MDELAY(20);
- }
-
-// ---------------------------------------------------------------------------
-//  LCM Driver Implementations
-// ---------------------------------------------------------------------------
-
-static void lcm_set_util_funcs(const LCM_UTIL_FUNCS * util)
-{
-  memcpy(&lcm_util, util, sizeof(LCM_UTIL_FUNCS));
-}
-
-static void lcm_get_params(LCM_PARAMS * params)
-{
-    memset(params, 0, sizeof(LCM_PARAMS));
-
-		params->type   								= LCM_TYPE_DSI;
-    params->width  							= FRAME_WIDTH;
-    params->height 							= FRAME_HEIGHT;
-
-#if (LCM_DSI_CMD_MODE)
-		params->dsi.mode   = CMD_MODE;
-#else
-		params->dsi.mode   = SYNC_PULSE_VDO_MODE;
-#endif
-
-    // DSI
-    /* Command mode setting */
-    params->dsi.LANE_NUM						= LCM_FOUR_LANE;
-    //The following defined the fomat for data coming from LCD engine.
-    params->dsi.data_format.color_order 			= LCM_COLOR_ORDER_RGB;
-    params->dsi.data_format.trans_seq   			= LCM_DSI_TRANS_SEQ_MSB_FIRST;
-    params->dsi.data_format.padding     			= LCM_DSI_PADDING_ON_LSB;
-    params->dsi.data_format.format      			= LCM_DSI_FORMAT_RGB888;
-
-   // Highly depends on LCD driver capability.
-   // Not support in MT6573
-    params->dsi.packet_size=256;
-  
-   //video mode timing
-    params->dsi.PS								= LCM_PACKED_PS_24BIT_RGB888;
-
-    params->dsi.vertical_sync_active				= 2;
-    params->dsi.vertical_backporch				= 16;
-    params->dsi.vertical_frontporch				= 9;
-    params->dsi.vertical_active_line				= FRAME_HEIGHT;
-
-    params->dsi.horizontal_sync_active			= 36;
-    params->dsi.horizontal_backporch			= 90;
-    params->dsi.horizontal_frontporch			= 90;
-    params->dsi.horizontal_active_pixel			= FRAME_WIDTH;
-  
-    //improve clk quality
-    params->dsi.PLL_CLOCK = 230; //this value must be in MTK suggested table
-
-}
+ } 	
 
 static void lcm_init(void)
 {
@@ -337,6 +336,7 @@ LCM_DRIVER hx8394d_hd720_dsi_vdo_p34_lcm_drv =
 	.resume         = lcm_resume,
 	.compare_id     = lcm_compare_id,
 #if (LCM_DSI_CMD_MODE)
-  .update.        = lcm_update,
+        .update.        = lcm_update,
 #endif
 };
+   
