@@ -22,7 +22,7 @@ before_install:
 
 script:  
   - export CROSS_COMPILE=~/arm-eabi-4.8/bin/arm-eabi-
-  - export KBUILD_BUILD_USER="DeVvil1"
+  - export KBUILD_BUILD_USER="DEVvil1"
   - export KBUILD_BUILD_HOST="Fire-Dragon"
   - export ARCH=arm
   - export ARCH_MTK_PLATFORM=mt6592
